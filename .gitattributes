@@ -17,6 +17,7 @@ lang/language.h -text
 /language.h -text
 /makemask.todo -text
 /match.c -text
+/memoserv.c -text
 /modconfig.h.in -text
 /new.c -text
 /nickserv.c -text
