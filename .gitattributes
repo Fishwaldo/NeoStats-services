@@ -3,7 +3,6 @@
 /INSTALL -text
 /Makefile.in -text
 /README.services -text
-/ReadMe -text
 /configure -text
 /configure.in -text
 /hash.c -text
