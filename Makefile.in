@@ -1,34 +1,46 @@
-INCLUDES = -I../..
-
-SOURCES= match.c hash.c servicescore.c nickserv.c languages.c
-OBJECTS= match.o hash.o servicescore.o nickserv.o languages.h
-TARGET= services.so
-
+#Neostats Module Makefile!
 CC=@CC@
-CFLAGS=@CFLAGS@ -fPIC $(INCLUDES)
-LINKER=ld
+CFLAGS=@CFLAGS@
+LDFLAGS= -rdynamic @LIBS@
+INSTALL = @INSTALL@                                                                                                                 
+INSTALL_PROGRAM = @INSTALL_PROGRAM@                                                                                                 
+INSTALL_DATA = @INSTALL_DATA@
+DIRECTORY=@DIRINST@/dl/
+INCLUDES=-I@DIRINST@/include/ -I.
 
-all:	$(OBJECTS) languages
-	$(LINKER) -shared -o $(TARGET) $(LIBS) $(OBJECTS)
-	/bin/cp $(TARGET) ../
+SOURCES= match.c hash.c servicescore.c nickserv.c language.c                                                                       
+OBJECTS= match.o hash.o servicescore.o nickserv.o                                                                       
+TARGET= services.so                 
+DOCS=README.services
+
+
+
+all:	 module
+
+language.h:	lang/language.h
+		cp -p lang/language.h .
+
+lang/language.h: 	lang/Makefile lang/index
+			(cd lang ; $(MAKE) language.h)  
+
+.c.o:	
+	 $(CC) -c $(CFLAGS) $(INCLUDES) $<
+
+module:	 $(OBJECTS) language.h
+	 $(CC) -nostdlib -shared -o $(TARGET) $(LDFLAGS) $(OBJECTS)
 
 clean:
-	/bin/rm -rf ../$(TARGET) Makefile
-	/bin/rm -rf *.o *.lo *.so
-	(cd lang ; $(MAKE clean > /dev/null)
+	 /bin/rm -rf $(TARGET) *.o
+	 (cd lang ; $(MAKE) clean)
 
-languages:
-	(cd lang ; $(MAKE) CFLAGS="$(CFLAGS)")
+install: module
+	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
+	 $(INSTALL) -m 644 $(DOCS) @DIRINST@/docs/
 
+$(OBJECTS): Makefile
 
-match.o:	
-hash.o:		services.h
-servicescore.o:	hash.c	match.c	services.h
-languages.o:	lanuages.c languages.h services.h
-nickserv.o:	servicescore.c	hash.c	match.c	services.h
-
-language.h: lang/language.h
-	cp -p lang/language.h .
-
-lang/language.h: lang/Makefile lang/index
-	(cd lang ; $(MAKE) language.h)  
+match.o:	match.c
+hash.o:		hash.c
+servicescore.o: hash.c match.c language.c nickserv.c
+nickserv.o:	match.c hash.c servicescore.c
+langauges.o:	servicescore.c nickserv.c

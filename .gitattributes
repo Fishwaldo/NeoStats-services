@@ -2,8 +2,12 @@
 /ChangeLog -text
 /INSTALL -text
 /Makefile.in -text
+/README.services -text
 /ReadMe -text
+/configure -text
+/configure.in -text
 /hash.c -text
+/install-sh -text
 lang/Makefile -text
 lang/en_us -text svneol=unset#unset
 lang/en_us.l -text
@@ -14,6 +18,7 @@ lang/language.h -text
 /language.h -text
 /makemask.todo -text
 /match.c -text
+/modconfig.h.in -text
 /new.c -text
 /nickserv.c -text
 /options.h -text

@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: hash.c,v 1.1 2002/02/27 12:21:27 fishwaldo Exp $
+** $Id: hash.c,v 1.2 2002/03/28 08:58:16 fishwaldo Exp $
 */
 
 
