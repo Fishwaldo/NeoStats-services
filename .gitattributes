@@ -1,0 +1,22 @@
+* text=auto !eol
+/ChangeLog -text
+/INSTALL -text
+/Makefile.in -text
+/ReadMe -text
+/hash.c -text
+lang/Makefile -text
+lang/en_us -text svneol=unset#unset
+lang/en_us.l -text
+lang/index -text
+lang/langcomp.c -text
+lang/language.h -text
+/language.c -text
+/language.h -text
+/makemask.todo -text
+/match.c -text
+/new.c -text
+/nickserv.c -text
+/options.h -text
+/services.h -text
+/servicescore.c -text
+/svc_help.c -text

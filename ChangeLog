@@ -1,0 +1,67 @@
+Services ChangeLog (A stands for Alpha, B stands for Beta and R stands for Full Release)
+Version 0.1.5A  - Fish - Ocotber 31, 2001
+- Tested with new Neo, 2.0.13, works fine, but 2.0.13 has bugs... waiting
+  for 2.0.14 (Send Shmad the patches)
+- Language system implemented... entire Help Interface done, porting over static
+  strings as we speak... - Thanks to epona for the language stuff
+- a few bug fixes with opercomment
+- have to redo recover
+- I can see a beta release on the horizon!!!!
+
+Version 0.1.4A  - Fish - Ocotber 29, 2001
+- Forbidden nicknames now added, and checked when trying to register
+  if you forbid a nickname that is in use (and online) then it drops the
+  registration as well (and notifies the online user that its dropped
+- more bugfixes
+- setpass, getpass added, but can be disabled via config interface
+- vhost support enabled (can be disabled)
+- all config options now in options.h (till we get our config interface)
+
+Version 0.1.3A  - Fish - October 28, 2001
+- Access Lists added
+- fixed a segfault in core Neo (with corelen in parse)
+- Nick Suspension done, with comment place in opercomment field
+
+Version 0.1.2A  - Fish - October 27, 2001
+- Drop nickname supported, with opers also able to drop nicknames!
+  (Configurable levels again)
+- opercomments added.. Allows opers to save comments with a nick
+- sync db done... only sync's nicks that have changed information (good for
+  large networks.. doesn't try to sync 2000 nicknames when only 100 have
+  changed information that needs to be synced)
+- set interface done
+- Woop! its starting to be useable... 
+- info and channel greetings sets
+- AIM, ICQ, Password sets
+- private, kill, secure set
+- Added some checks to see how long timers and database sync's take.
+  if it takes too long, it suggests the operators adjust timer settings via
+  the services channel
+- info updated
+- logout - if a user wants to stay connected, but not identified to nickserv
+  (because it might be a shared computer) they can un-identify (idea stolen
+  from epona!)
+
+Version 0.1.1A	- Fish - October 25, 2001
+- Services Timers Implemented. Services Have their own Timer system that is
+  independand of NeoStats
+- Nick_change, Kill, Signoff
+- Enforcer Nick signon and quit when a nick has not been identified for and
+  if their kill setting is active
+--- This needs investigation, Why Can't I sign on a user straight after
+    sending svsnick? means I have to use a timer to sign them on, which is
+    *bad*
+- cleaned up some of the logging stuff.. made most other logging, apart from
+  critical errors #ifdef DEBUG
+- A few Bug Fixes.
+- Has been running on a largish network for > 2Hrs
+- /ctcp nickserv version just for fun!
+
+Version 0.1Alpha - Fish - October 25th, 2001
+- First release to Shmad
+- Initial Nickserv services implemented... Very Basic Functions at the
+  moment like:
+	Register, Identify, Info, Ghost, Recover
+- Uses Berkeley Database to store information. Very reliable. (I had so many
+  crashes during my initial coding, and not once did the database be corrupt)	
+- As far as I can tell, pretty stable... so far

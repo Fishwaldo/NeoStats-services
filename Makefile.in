@@ -1,0 +1,34 @@
+INCLUDES = -I../..
+
+SOURCES= match.c hash.c servicescore.c nickserv.c languages.c
+OBJECTS= match.o hash.o servicescore.o nickserv.o languages.h
+TARGET= services.so
+
+CC=@CC@
+CFLAGS=@CFLAGS@ -fPIC $(INCLUDES)
+LINKER=ld
+
+all:	$(OBJECTS) languages
+	$(LINKER) -shared -o $(TARGET) $(LIBS) $(OBJECTS)
+	/bin/cp $(TARGET) ../
+
+clean:
+	/bin/rm -rf ../$(TARGET) Makefile
+	/bin/rm -rf *.o *.lo *.so
+	(cd lang ; $(MAKE clean > /dev/null)
+
+languages:
+	(cd lang ; $(MAKE) CFLAGS="$(CFLAGS)")
+
+
+match.o:	
+hash.o:		services.h
+servicescore.o:	hash.c	match.c	services.h
+languages.o:	lanuages.c languages.h services.h
+nickserv.o:	servicescore.c	hash.c	match.c	services.h
+
+language.h: lang/language.h
+	cp -p lang/language.h .
+
+lang/language.h: lang/Makefile lang/index
+	(cd lang ; $(MAKE) language.h)  

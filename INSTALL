@@ -1,0 +1,40 @@
+Services for NeoStats 0.1 Release
+=================================
+Requirements:
+Berkeley DB (Most systems have it already)
+	- http://www.sleepycat.com/
+NeoStats 2.0.12 (Duh)
+	- http://www.neostats.net/neostats/
+
+Tested with Unreal 3.1.1, 3.1.2 and 3.2Beta3
+
+Depending on how u got Services for Neostats, depends on how to Install it.
+
+If you got it part of Neostats, there isn't much apart from just enabling
+services in the configure script:
+	./configure --enable-services <any other options>
+see ./configure --help for other options
+
+if you got it as a Patch, then when I get around to doing it, I will write a
+patch, but at the moment, you have to patch manually.
+
+At the moment, if you can't figure out how to Patch stuff, then these
+versions are not for you. As Development moves along, I will probably
+release a script that patches Neo for you.
+(as of Version 2.0.12 of Neo, there is a few bug fixes, but mostly feature
+enhancements - Read the NeoStats Changelog after you patch)
+
+
+Configuration:
+==============
+If you read the ReadMe file, then you will also realise that untill Operserv
+is implemented, there is no easy way to configure Services. 
+Currently, if you want to change something, then you have to edit
+services.h. Towards the bottom of the file are #ifdef's 
+Some are commented, some are not. 
+if you are not sure what some of the #ifdef's do, then u should look in the
+code.
+
+If you want to reset the Databases, delete data/nsdata.db (for Nickserv)
+
+

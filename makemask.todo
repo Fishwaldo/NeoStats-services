@@ -1,0 +1,48 @@
+/* Given a user, return a mask that will most likely match any address the
+ * user will have from that location.  For IP addresses, wildcards the
+ * appropriate subnet mask (e.g. 35.1.1.1 -> 35.*; 128.2.1.1 -> 128.2.*);
+ * for named addresses, wildcards the leftmost part of the name unless the
+ * name only contains two parts.  If the username begins with a ~, delete
+ * it.  The returned character string is malloc'd and should be free'd
+ * when done with.
+ */
+
+/*
+char *create_mask(User *u)
+{
+    char *mask, *s, *end;
+    int ulen = strlen(u->username);
+
+    /* Get us a buffer the size of the username plus hostname.  The result
+     * will never be longer than this (and will often be shorter), thus we
+     * can use strcpy() and sprintf() safely.
+     */
+    end = mask = smalloc(ulen + strlen(GetHost(u)) + 2);
+    end += sprintf(end, "%s%s@",
+    	(ulen < (*(u->username) == '~' ? USERMAX+1 : USERMAX) ? "?" : ""),
+    	(*(u->username) == '~' ? u->username+1 : u->username));
+    
+    if (strspn(GetHost(u), "0123456789.") == strlen(GetHost(u))
+		&& (s = strchr(GetHost(u), '.'))
+		&& (s = strchr(s+1, '.'))
+		&& (s = strchr(s+1, '.'))
+		&& (   !strchr(s+1, '.'))) {	/* IP addr */
+		s = sstrdup(GetHost(u));
+		*strrchr(s, '.') = 0;
+		
+		sprintf(end, "%s.*", s);
+		free(s);
+    } else {
+		if ((s = strchr(GetHost(u), '.')) && strchr(s+1, '.')) {
+	    	s = sstrdup(strchr(GetHost(u), '.')-1);
+	    	*s = '*';
+		} else {
+	    	s = sstrdup(GetHost(u));
+		}
+		strcpy(end, s);
+		free(s);
+    }
+    return mask;
+}
+
+*/

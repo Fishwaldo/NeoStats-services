@@ -1,0 +1,176 @@
+Services for NeoStats Version 0.1
+---------------------------------
+
+Well, I finally got pissed of with some of the services out there, and I
+recently played around with Magick-II.
+I like some of the features that Magick-II has, but it is a Big Huge Ugly
+muther of a monster (I'm not kidding, to Compile Magic and the required
+Libaries took well over 5 hours on a Sparc64 Box!)
+
+Unfortuantly, while I can see that Multithreading in Services is a good
+idea, making it work effectively is really hard. When you have to deal with
+Locking and so on, it can be a real pain.
+
+The Magick-II services, as far as I can tell, have a BIG issue with
+locking... constantly I was getting Unknown User and Unknown Channel
+messages... the threads were just not working fast enough... (yeah, I know
+its beta software, but I honestly think that there is a flaw in Magick-II
+base coding, and to fix the problems would require a lot of Re-work)
+
+So, thats what prompted me to write Services for Neostats... I plan to
+incorporate as many of the features of Magick-II, and other services that I
+like into these services... and make it useable.. something that doesn't
+take 5 hours to compile (Currently, NeoStats with Services only takes around
+15Sec's to Compile, Beat that Magick!!!!)
+
+------------------------------------------------------------------------------
+So here are some of the features I have planned:
+------------------------------------------------------------------------------
+1. All the Usual NickServ, ChanServ, MemoServ, Operserv features.
+2. CommServ, in Magick-II is a nice idea, I'm going to include it as a
+   optional Module that can be loaded if you want it. See Below for CommServ
+   Features
+3. Optionally Replace NeoStats Permission systems with either a database 
+   (Where Opers have to be defined to have access, or if CommServ is used, by 
+   Committe - Eg, Members of Opers Committe have access to these functions)  
+4. BotServ. Most Likely, BotServ will talk EggDrop Protocol, so in fact, the
+   Bots available in BotServ are Eggdrop Bots that are controlled by
+   Services. This would allow users to have more features that what is in
+   BotServ in existing Services. This will be after a 1.0 Release.
+5. FileServ. A DCC FileService for the Network, where Network Administrators
+   can setup file serving applications, so they can share files. and example
+   might be to serve mIRC scripts designed for the network.
+6. No Config File. All settings will be done Online. On Un-Configured
+   Networks, initial configuration would be done via OperServ.
+7. Language Support. 
+
+The Features of each of the Services will be (and the Order they will be
+developed and Milestones for that Release):
+
+0.1 release will be just the Base Services Core. Things I need for All
+Services. Not really usable by anyone. Includes:
+   * Berkeley DB Storage for all Services - Very reliable, and widely
+     Supported
+   * Minor Changes to the NeoStats Core (Will be submitted to Shmad for
+     Future versions of Neostats, hopefully he will accept them, otherwise 
+     I will distribute a Patch System for Neostats to run with Services)
+
+NickServ.(for 0.2 Release - Most features, not all, as some will require
+other services, eg, Picture Storage requires FileServ)
+   * All the standard NickServ features, such as identify, drop, register
+   * Private (To Hide last online information)
+   * Secure (To disable identification even if host matchess access list)
+   * Kill (to either kill a user that has not identified in a specific time, 
+     or to change their nick - The Network will define what it does)
+   * NickName Expiry (To expire un-used nicks)
+   * SendPass (Allows opers to send password automatically to the registered
+     email address of a nick)
+   * SetPass (Allow Opers to reset passwords)
+   * GetPass (Allow Opers to retrive passwords)
+   * Info, URL, Email, ICQ, AIM fields that can be set by the user
+   * Oper Comments (Allow Operators to set comments about a Nick, that only
+     other opers can see)
+   * Forbid (Don't allow users to register certian Nicks
+   * Suspend (Temporarly suspend access to a Nickname)
+   * Drop (Drop a Nickname Registration by Opers)
+   * Configurable Logging, with some PHP scripts to search log files for
+     events - Ideal when sorting out Nickname Disputes etc etc etc
+   * Picture Storage - As long as FileServ is active (see below) allow users
+     to DCC send pictures that can be associated with their nickname
+     registration, and other users can download it. File size limits can be 
+     set by the Opers (Subject to FileServ Development)
+   * Ability to replace Current NeoStats Permissions with NickServ
+     registrations. Eg, can specify levels for nicks, regardless of O line 
+     flags, and the opers can use it.
+   * Vhost Support. If a user has identified to nickserv, then their vhost
+     is set to what they have stored with nickserv. 2 ways that this can
+     work:
+	* they request a oper to set it, they can not unset it or delete it
+        without opers help
+	* They can set it themselves, delete it, or change it.
+
+MemoServ (For 0.3 Release. Most Services available)
+   * Standard Features such as Send/read/erase
+   * Long Memos. Ability to write more than 1 line memo's and send to
+     someone
+   * File Attachments (Subject to FileServ Development)
+   * Ability to set Memo's to be forwarded via Email (maybe even ICQ/AIM?)
+
+CommServ (For 0.4 Release, Again Most Services, some will require other
+Services to enable)
+   * Committee MemberShip. ie, you can define a Committee Opers, and add
+     registered Nicks to that Committee.
+   * Group Memo's. You can send a Memo to a Committee, and all users of that
+     Committee get it
+   * Voting Systems. Allow Committee's to Vote on issues.
+   * Not Restricted to Opers
+   * Can replace Current NeoStats Permission systems (based on O line flags)
+     with Committe Membership. E.G. you can say Opers have access to these
+     commands, Service Admins can do this plus opers... (Think of the Levels
+     command in most chanserv's)
+   * FileServ Integration, so you can share files between members in a
+     Committee
+
+OperServ (For 0.5 Release)
+   * Almost all Common OperServ commands found today.
+   * Akill Management
+   * Clone Protection
+   * Nickname Flood Protection
+   * Kill
+   * All Commands would be issued via the current NeoStats Bot. (ie, instead
+     of having NeoStats, and OperServ, just one Bot, NeoStats (or what ever 
+     you want to call it) 
+   * Interface to search Log Files for Events.
+   * Services Configuration Interface. Upto here, all versions will have all
+     settings compiled in, and unable to change, after this is done, you will 
+     be able to change settings via OperServ instead of editing a config file.
+  
+FileServ (For 0.6 Release)
+   * Ability to have a FileServer
+   * Integrated with NickServ, CommServ, MemoServ   
+   * Bandwidth Limiting (So it doesn't consume all your bandwidth and Lag
+     your Services.
+   * Queuing. So you Can Say only so many File Transfers can happen at one
+     time
+   * A public File area, where Opers can upload certian files
+   * Automatic Deletion of files associated with Expired Nicks/Committee's
+   * Quota Support
+
+Channels Support (0.7 Release)
+   * As NeoStats in its Current form doesn't have any channel support (as of
+     2.0.12, I'll be working on Channel Support for NeoStats for this release. 
+     No new Service Features (if Shmad works on Channel support and gets it
+     running before i get here, then this will just end up a maintence
+     release.) 
+
+ChanServ (0.8 Release)
+   * Normal Channel Services
+   * Integration with FileServ, to share files between Channel Members
+   * Op/De-op, modes, access lists, level definitions etc
+   
+Release 0.9 will Focus on Stability, and fixing any bugs
+Release 1.0 should be fully Functioning Services
+
+After Release 1.0, I'm not sure how the development will proceed. I plan to
+Integrate a BotServ into these services as well, but exact details are not
+yet Concrete. I've being toying with the idea of implementing support for
+Eggdrops BotNet, with Userfile sharing (based on NickServ, ChanServ), as I
+think a eggdrop bot integrated with services would be a lot better than a
+Static Bot, that can't be extended.
+But I'm also thinking about BotServ with a TCL Scripting engine. 
+
+I think a TCL engine would be cool, but a lot harder to implement
+Other things I'm thinking about after a 1.0 release:
+Backup Services with Automatic Replication
+Ability to run different *Serv's on different hosts, and all share
+information (eg, might be better to have fileserv on a different machine)
+Any other features that I think are cool... or anything that you suggest to
+me that I think is cool as well. 
+
+Also, Language settings would be cool as well.. but I'm still not 100% sure
+on how to do that effectivly. 
+
+Anyways, thats my Rant for the moment... Read the INSTALL guide on how to
+get it all up and running.
+
+if you want more info, then email me at fish@irc-chat.org
