@@ -40,8 +40,8 @@
 
 #include <stdio.h>
 #include <db.h>
-#include "dl.h"
-#include "stats.h"
+#include <dl.h>
+#include <stats.h>
 #include "services.h"
 #include "language.h"
 
@@ -70,119 +70,112 @@ void lslog(char *, ...);
 int guest_num = 1000;
 
 
-int __Bot_Message(char *origin, char *coreLine, int type)
+int __Bot_Message(char *origin, char **av, int ac)
 {
+	char *buf;
 	User *u;
-	char *cmd, *tok1, *tok2;
 	u = finduser(origin);
 	if (!u) {
 		log("Unable to find user %s (nickserv)", origin);
 		return -1;
 	}
-
-	if (coreLine == NULL) return -1;
-	cmd = strtok(coreLine, " ");
-
-	if (!strcasecmp(cmd, "HELP")) {
-		send_help(u, strtok(NULL,""));
+	log("%s", av[1]);
+	if (!strcasecmp(av[1], "HELP")) {
+		if (ac > 2) {
+			send_help(u, av[2]);
+		} else {
+			send_help(u, NULL);
+		}
 		return 1;
-	} else if (!strcasecmp(cmd, "REGISTER")) {
-		tok1 = strtok(NULL, " ");
-		if (tok1 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, please type /msg nickserv help register");
+	} else if (!strcasecmp(av[1], "REGISTER")) {
+		if (ac <= 3) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, please type /msg %s help register", s_NickServ);
 			return -1;
 		}
-		if (strpbrk("@", tok1) == NULL) {
+		if (strpbrk("@", av[2]) == NULL) {
 			privmsg(u->nick, s_NickServ, "Your Email address is invalid (No @)");
 			return -1;
 		}
-		if (strpbrk(".", tok1) == NULL) {
+		if (strpbrk(".", av[2]) == NULL) {
 			privmsg(u->nick, s_NickServ, "Your Email address is invalid (No .)");
 			return -1;
 		}
-		tok2 = strtok(NULL, " ");
-		if (tok2 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, please type /msg nickserv help register");
-			return -1;
-		}
-		ns_register(u, tok1, tok2);
+		ns_register(u, av[2], av[3]);
 		return 1;
-	} else if (!strcasecmp(cmd, "IDENTIFY")) {
-		tok1 = strtok(NULL, " ");
-		if (tok1 == NULL) {
+	} else if (!strcasecmp(av[1], "IDENTIFY")) {
+		if (ac <= 2) {
 			privmsg(u->nick, s_NickServ, "Error, You must Supply a Password");
 			return -1;
 		}
-		ns_identify(u, tok1);	
+		ns_identify(u, av[2]);	
 		return 1;
-	} else if (!strcasecmp(cmd, "INFO")) {
-		tok1 = strtok(NULL, " ");
-		if (tok1 == NULL) {
+	} else if (!strcasecmp(av[1], "INFO")) {
+		if (ac <= 2) {
 			privmsg(u->nick, s_NickServ, "Error, you Must supply a Nickname");
 			return -1;
 		}
-		ns_info(u, tok1);
+		ns_info(u, av[2]);
 		return 1;
-	} else if (!strcasecmp(cmd, "GHOST")) {
-		tok1 = strtok(NULL, " ");
-		if (tok1 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, You must supply a nickname");
+	} else if (!strcasecmp(av[1], "GHOST")) {
+		if (ac <= 3) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help ghost", s_NickServ);
 			return -1;
 		}
-		tok2 = strtok(NULL, " ");
-		if (tok2 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, You must supply a Password");
+		ns_ghost(u, av[2], av[3]);
+		return 1;
+	} else if (!strcasecmp(av[1], "RECOVER")) {
+		if (ac <= 3) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help recover", s_NickServ);
 			return -1;
 		}
-		ns_ghost(u, tok1, tok2);
+		ns_recover(u, av[2], av[3]);
 		return 1;
-	} else if (!strcasecmp(cmd, "RECOVER")) {
-		tok1 = strtok(NULL, " ");
-		if (tok1 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, You must supply a nickname");
+	} else if (!strcasecmp(av[1], "DROP")) {
+		if (ac <= 2) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help drop", s_NickServ);
 			return -1;
 		}
-		tok2 = strtok(NULL, " ");
-		if (tok2 == NULL) {
-			privmsg(u->nick, s_NickServ, "Error, you must supply your password");
-			return -1;
-		}
-		ns_recover(u, tok1, tok2);
+		ns_drop(u, av[2]);
 		return 1;
-	} else if (!strcasecmp(cmd, "DROP")) {
-		ns_drop(u, strtok(NULL, " "));
-		return 1;
-	} else if (!strcasecmp(cmd, "LOGOUT")) {
+	} else if (!strcasecmp(av[1], "LOGOUT")) {
 		ns_logout(u);
 		return 1;
-	} else if (!strcasecmp(cmd, "\001VERSION\001")) {
-		sts(":%s NOTICE %s :\001VERSION NickServ Version %s", s_NickServ, u->nick, NS_Version);
+	} else if (!strcasecmp(av[1], "\001VERSION\001")) {
+		privmsg(u->nick, s_NickServ, ":\001VERSION NickServ Version %s", NS_Version);
 		return 1;
-	} else if (!strcasecmp(cmd, "SET")) {
-		ns_set(u, strtok(NULL, ""));
+	} else if (!strcasecmp(av[1], "SET")) {
+		buf = joinbuf(av, ac, 2);
+		ns_set(u, buf);
+		free(buf);
 		return 1;
-	} else if (!strcasecmp(cmd, "OPERCOMMENT")) {
+	} else if (!strcasecmp(av[1], "OPERCOMMENT")) {
 		/* if the user doesn't have the access rights, just return the normal what? message! */
 		if (UserLevel(u)  < OPERCOMMENT_SET_ACCESS_LEVEL) {
 			goto unknown;
 		}
-		ns_opercomment(u, strtok(NULL, ""));
+		buf = joinbuf(av, ac,  2);
+		ns_opercomment(u, buf);
+		free(buf);
 		return 1;
-	} else if (!strcasecmp(cmd, "SUSPEND")) {
+	} else if (!strcasecmp(av[1], "SUSPEND")) {
 		/* if the user doesn't have access, then return the normal unknown message */
 		if (UserLevel(u) < OPERSUSPEND_SET_ACCESS_LEVEL) {
 			goto unknown;
 		}
-		ns_suspend(u, strtok(NULL, ""));
+		buf = joinbuf(av, ac, 2);
+		ns_suspend(u, buf);
+		free(buf);
 		return 1;
-	} else if (!strcasecmp(cmd, "FORBID")) {
+	} else if (!strcasecmp(av[1], "FORBID")) {
 		/* if the user doesn't have the access, return the normal unknown list */
 		if (UserLevel(u) < OPERFORBID_SET_ACCESS_LEVEL) {
 			goto unknown;
 		}
-		ns_forbid(u, strtok(NULL, ""));
+		buf = joinbuf(av, ac, 2);
+		ns_forbid(u, buf);
+		free(buf);
 		return 1;
-	} else if (!strcasecmp(cmd, "GETPASS")) {
+	} else if (!strcasecmp(av[1], "GETPASS")) {
 		/* check its enabled */
 		if (!ENABLE_GETPASS) {
 			goto unknown;
@@ -190,9 +183,13 @@ int __Bot_Message(char *origin, char *coreLine, int type)
 		if (UserLevel(u) < GETPASS_ACCESS_LEVEL) {
 			goto unknown;
 		}
-		ns_getpass(u, strtok(NULL, " "));
+		if (ac <= 2) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help getpass", s_NickServ);
+			return -1;
+		}
+		ns_getpass(u, av[2]);
 		return 1;
-	} else if (!strcasecmp(cmd, "SETPASS")) {
+	} else if (!strcasecmp(av[1], "SETPASS")) {
 		/* check its enabled */
 		if (!ENABLE_SETPASS) {
 			goto unknown;
@@ -200,23 +197,39 @@ int __Bot_Message(char *origin, char *coreLine, int type)
 		if (UserLevel(u) < SETPASS_ACCESS_LEVEL) {
 			goto unknown;
 		}
-		ns_setpass(u, strtok(NULL, ""));
+		if (ac <= 2) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help setpass", s_NickServ);
+			return -1;
+		}
+		ns_setpass(u, av[2]);
 		return 1;	
-	} else if (!strcasecmp(cmd, "VHOST")) {
+	} else if (!strcasecmp(av[1], "VHOST")) {
 		if (!((ENABLE_VHOST >= 1) && (UserLevel(u) >= SETVHOST_ACCESS_LEVEL))) {
 			privmsg(u->nick, s_NickServ, "Access Denied");
 			return 1;
 		}
-		ns_setvhost(u, strtok(NULL, ""));
+		if (ac <= 2) {
+			privmsg(u->nick, s_NickServ, "Error, Incorrect Syntax, Please type /msg %s help vhost", s_NickServ);
+			return -1;
+		}
+		buf = joinbuf(av, ac, 2);
+		ns_setvhost(u, buf);
+		free(buf);
 		return 1;
-	} else if (!strcasecmp(cmd, "ACCESS")) {
-		ns_accesslist(u, strtok(NULL, ""));
+	} else if (!strcasecmp(av[1], "ACCESS")) {
+		if (ac <= 2) {
+			ns_accesslist(u, NULL);
+		} else {
+			buf = joinbuf(av,ac,  2);
+			ns_accesslist(u, buf);
+			free(buf);
+		}
 		return 1;
 	}
 
 
 	unknown:
-	privmsg(u->nick, s_NickServ, "Unknown Command: \2%s\2, maybe you need help?", cmd);
+	privmsg(u->nick, s_NickServ, "Unknown Command: \2%s\2, maybe you need help?", av[1]);
 	return -1;
 
 
@@ -658,6 +671,7 @@ static void ns_logout(User *u) {
 	} else {
 		ns->onlineflags &= ~NSFL_IDENTIFED;
 	}
+	ssvsmode_cmd(u->nick, "-r");
 	privmsg(u->nick, s_NickServ, "You have been Logged out of Services");
 	if (ns->secure > 0) privmsg(u->nick, s_NickServ, "You will have to identify again to gain access to Services");	
 }
@@ -898,8 +912,7 @@ int ns_nickchange_user(char *line) {
 	/* this function is called after NeoStats has updated the Internal Tables, so finduser will work */
 
 	ns_new_user(finduser(targetnick));
-	sts(":%s SVSMODE %s :-r", me.name, targetnick);
-	UserMode(targetnick, "-r");
+	ssvsmode_cmd(targetnick, "-r");
 	return 1;
 }
 int ns_new_user( User *u) {
@@ -954,7 +967,7 @@ int ns_new_user( User *u) {
 					privmsg(u->nick, s_NickServ, "This Nickname is Registered and Protected");
 					privmsg(u->nick, s_NickServ, "You have been matched against your accesslist");
 					privmsg(u->nick, s_NickServ, "but you may still have to identify to access certian functions");	
-					if (strlen(temp_user->vhost) > 0) sts(":%s CHGHOST %s %s", s_NickServ, u->nick, temp_user->vhost);
+					if (strlen(temp_user->vhost) > 0) ssvshost_cmd(u->nick, temp_user->vhost);
 					temp_user->onlineflags = NSFL_ACCESSMATCH;
 #ifdef DEBUG
 					log("flags: %d", temp_user->onlineflags);
@@ -985,8 +998,7 @@ int ns_new_user( User *u) {
 
 		if (temp_user->kill > 1) temp_user->kill = 1;
 		privmsg(u->nick, s_NickServ, "Otherwise your nick will be changed");
-		sts(":%s SVSMODE %s :-r", me.name, u->nick);
-		UserMode(u->nick, "-r");
+		ssvsmode_cmd(u->nick, "-r");
 
 		/* create a new Svc's Timer to change the nick if they do not identify 
 		** We Don't delete the timer if they do change, but when ns_ident_timeout gets called
@@ -1032,7 +1044,7 @@ int ns_ident_timeout(char *nick) {
 		snprintf(tmpnick, 32, "Guest%i", guest_num++);
 
 	privmsg(u->nick, s_NickServ, "Your Nickname has been changed to \002%s\002 as you did not identify", tmpnick);
-	sts(":%s SVSNICK %s %s :Identify Timeout for Protected Nick", s_NickServ, u->nick, tmpnick);
+	ssvsnick_cmd(u->nick, tmpnick);
 	free(tmpnick);	
 
 /* now we need to signon a new user to take this nick, so that if the clients script 
@@ -1108,7 +1120,7 @@ int ns_quit_enforced_nick(char *nick) {
 		return 1;
 	}
 	
-	sts(":%s QUIT :Enforcer Timeout", nick);
+	squit_cmd(nick, "Enforcer Timeout");
 
 	/* TODO: its this user is added to any list, then remove it */
 
@@ -1187,10 +1199,8 @@ static void ns_recover(User *u, char *nick, char *pass) {
 		snprintf(tmp, 10, "Guest%i", guest_num++);
 	}
 	privmsg(nick, s_NickServ, "The Nick \002%s\002 was recovered by %s, your Nickname has been changed to %s", nick, u->nick, tmp);
-	sts(":%s SVSMODE %s :-r", me.name, nick);
-	UserMode(nick, "-r");
-	sts(":%s SVSNICK %s %s :Recovery", s_NickServ, nick, tmp);
-	Usr_Nick(nick, tmp);
+	ssvsmode_cmd(nick, "-r");
+	ssvsnick_cmd(nick, tmp);
 	privmsg(u->nick, s_NickServ, "The Nick \002%s\002 was Recovered", nick);
 	notice(s_NickServ, "The Nick \002%s(%s@%s)\002 was recovered by %s(%s@%s)", nick, target->username, target->hostname, u->nick, u->username, u->hostname);
 	free(tmp);	
@@ -1222,11 +1232,10 @@ static void ns_ghost(User *u, char *nick, char *pass) {
 		return;
 	}
 	privmsg(u->nick, s_NickServ, "Success. the Nickname %s has been killed", target->nick);
-	sts(":%s SVSKILL %s :Ghost Command Used by %s(%s@%s)", s_NickServ, target->nick, u->nick, u->username, u->vhost); 
+	ssvskill_cmd(target->nick, ":KILLED: Ghost Command Used by %s(%s@%s)");
 	notice(s_NickServ, "%s(%s@%s) Used Ghost Comand on %s(%s@%s)", u->nick, u->username, u->hostname, target->nick, target->username, target->hostname); 
 	tmp = smalloc(255);
 	snprintf(tmp, 255, "%s", target->nick);
-	Usr_Kill(s_NickServ, tmp);
 	free(tmp);
 	free(temp_user);
 	return;
@@ -1322,8 +1331,7 @@ static void ns_identify(User *u, char *pass) {
 			log("%s %s", temp_user->pass, pass);
 			if (!strcasecmp(temp_user->pass, pass)) {
 				privmsg(u->nick, s_NickServ, "You are Now Identified");
-				sts(":%s SVSMODE %s :+r", me.name, u->nick);
-				UserMode(u->nick, "+r");
+				ssvsmode_cmd(u->nick, "+r");
 				temp = malloc(sizeof(u->username) + sizeof(u->vhost) + 2);
 				strcpy(temp, u->username);
 				strcat(temp, "@");
@@ -1337,11 +1345,10 @@ static void ns_identify(User *u, char *pass) {
 				return;			
 			} else {
 				privmsg(u->nick, s_NickServ, "Invalid Password");
-				sts(":%s SVSMODE %s :-r", me.name, u->nick);
-				UserMode(u->nick, "-r");
+				ssvsmode_cmd(u->nick, "-r");
 				temp_user->kill++;
 				if ((temp_user->kill -1) >= NO_BAD_PASS) {
-					sts(":%s SVSKILL %s :%d Bad Passwords for nick %s", s_NickServ, u->nick, NO_BAD_PASS, u->nick); 
+					ssvskill_cmd(u->nick, "KILLED: %d Bad Passwords for nick %s",NO_BAD_PASS, u->nick); 
 					Usr_Kill(s_NickServ, u->nick);
 				} 
 				return;
@@ -1418,8 +1425,7 @@ static void ns_register(User *u, char *email, char *pass) {
 	dbp->sync(dbp, 0);
 	privmsg(u->nick, s_NickServ, "Nickname \002%s\002 Registered under your account %s", u->nick, new_user->acl);
 	privmsg(u->nick, s_NickServ, "Your Password is \002%s\002 - Remember this for Later use.", new_user->pass);
-	UserMode(u->nick, "+r");
-	sts(":%s SVSMODE %s :+r", me.name, u->nick);
+	ssvsmode_cmd(u->nick, "+r");
 	return;
 
 }

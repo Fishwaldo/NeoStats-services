@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: services.h,v 1.2 2002/03/28 08:58:16 fishwaldo Exp $
+** $Id: services.h,v 1.3 2002/03/31 08:37:14 fishwaldo Exp $
 */
 
 #ifndef M_SERVICES
@@ -29,6 +29,7 @@
 #include <db.h>
 
 #include "stats.h"
+#include <hash.h>
 #include "options.h"
 
 
@@ -41,7 +42,7 @@ int last_db_sync;
 
 char ns_forbid_list[4096];
 typedef struct ns_user NS_User;
-NS_User *nsuserlist[NS_USER_LIST];
+hash_t *nsuserlist;
 
 
 struct ns_user {
@@ -128,6 +129,8 @@ void save_nick_forbid_list();
 int is_forbidden(char *);
 char *strnrepl(char *s, int size, const char *old, const char *new);
 void lang_init();
+extern void send_help(User *u, char *line);
+void notice_help(const char *source, char *dest, int message, ...);
 
 
 /* these functions are in the core neostats, and are needed for internal functions */

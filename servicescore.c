@@ -28,13 +28,14 @@ Module_Info my_info[] = { {
 } };
 
 
-int new_m_version(char *av, char *tmp) {
-	sts(":%s 351 %s :Module NickServ Loaded, Version %s %s %s",me.name, av,my_info[0].module_version,servicesversion_date,servicesversion_time);
+int new_m_version(char *origin, char **av, char *tmp) {
+	snumeric_cmd(351, origin, "Module NickServ Loaded, Version %s %s %s",my_info[0].module_version,servicesversion_date,servicesversion_time);
 	return 0;
 }
 
 Functions my_fn_list[] = {
-	{ "VERSION",	new_m_version,	1 },
+	{ "MSG_VERSION",	new_m_version,	1 },
+	{ "TOK_VERSION", 	new_m_version,  1 },
 	{ NULL,		NULL,		0 }
 };
 
@@ -108,7 +109,7 @@ void _fini() {
 	int ret;
 	if (dbp != NULL) {
 		if ((ret = dbp->close(dbp, 0) != 0)) {
-			sts(":%s GLOBOPS :NickServ DB Close Error: %s", me.name, db_strerror(ret));
+			globops("NickServ DB Close Error: %s", db_strerror(ret));
 		};
 	}
 	log("NickServ Unloaded");

@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: hash.c,v 1.2 2002/03/28 08:58:16 fishwaldo Exp $
+** $Id: hash.c,v 1.3 2002/03/31 08:37:14 fishwaldo Exp $
 */
 
 
@@ -18,48 +18,24 @@ void del_svs_dead_timers();
 
 
 
-static void add_regnick_to_hash_table(char *name, NS_User *ns)
-{
-	ns->hash = HASH(name, NS_USER_LIST);
-	ns->next = nsuserlist[ns->hash];
-	nsuserlist[ns->hash] = (void *)ns;
-}
-
-static void del_regnick_from_hash_table(char *name, NS_User *ns)
-{
-	NS_User *tmp, *prev = NULL;
-
-	for (tmp = nsuserlist[ns->hash]; tmp; tmp = tmp->next) {
-		if (tmp == ns) {
-			if (prev)
-				prev->next = tmp->next;
-			else
-				nsuserlist[ns->hash] = tmp->next;
-			tmp->next = NULL;
-			return;
-		}
-		prev = tmp;
-	}
-}
-
 void sync_changed_nicks_to_db() {
 	NS_User *tmp;
-	int i, j = 0;
+	hnode_t *nsn;
+	hscan_t nss;
+	int j = 0;
 	int starttime;
 	
 	starttime = time(NULL);
-	for (i = 0; i < NS_USER_LIST; i++) {
-		tmp = nsuserlist[i];
-		while (tmp) {
-			if (tmp->lastchange > last_db_sync) {
-				tmp->lastchange = time(NULL);
+	hash_scan_begin(&nss, nsuserlist);
+	while ((nsn = hash_scan_next(&nss))) {
+		tmp = hnode_get(nsn);
+		if (tmp->lastchange > last_db_sync) {
+			tmp->lastchange = time(NULL);
 #ifdef DEBUG
-				log("Syncing Nick %s", tmp->nick);
+			log("Syncing Nick %s", tmp->nick);
 #endif		
-				sync_nick_to_db(tmp);
-				j++;
-			}
-		tmp = tmp->next;
+			sync_nick_to_db(tmp);
+			j++;
 		}
 	}
 	last_db_sync = time(NULL);
@@ -173,20 +149,7 @@ int is_forbidden(char *nick) {
 	
 void init_regnick_hash()
 {
-	int i;
-	NS_User *ns, *prev;
-
-	for (i = 0; i < NS_USER_LIST; i++) {
-		ns = nsuserlist[i];
-		while (ns) {
-			prev = ns->next;
-			free(ns);
-
-			ns = prev;
-		}
-		nsuserlist[i] = NULL;
-	}
-	bzero((char *)nsuserlist, sizeof(nsuserlist));
+	nsuserlist = hash_create(NS_USER_LIST, 0, 0);
 }
 
 NS_User *lookup_regnick(char *name) 
@@ -222,6 +185,7 @@ NS_User *lookup_regnick(char *name)
 NS_User *new_regnick(char *name, int create)
 {
 	NS_User *ns, *ns2;
+	hnode_t *nsn;
 	DBT key, data;
 	int i;
 
@@ -268,19 +232,24 @@ NS_User *new_regnick(char *name, int create)
 	}	
 
 	memcpy(ns->nick, name, strlen(name)+1);
-	add_regnick_to_hash_table(name, ns);
+	nsn = hnode_create(ns);
+	if (!hash_isfull(nsuserlist)) {
+		hash_insert(nsuserlist, nsn, name);
+	} else {
+		log("eeek, NickServ User list hash is full");
+	}
 
 	return ns;
 }
 NS_User *findregnick(char *name)
 {
-	NS_User *ns;
-
-
-	ns = nsuserlist[HASH(name, NS_USER_LIST)];
-	while (ns && strcasecmp(ns->nick, name) != 0)
-		ns = ns->next;
-
+	NS_User *ns = NULL;
+	hnode_t *nsn;
+	
+	nsn = hash_lookup(nsuserlist, name);
+	if (nsn) {
+		ns = hnode_get(nsn);
+	}
 #ifdef DEBUG
 	log("findregnick(%s) -> %s", name, (ns) ? ns->nick : "NOTFOUND");
 #endif
@@ -289,18 +258,20 @@ NS_User *findregnick(char *name)
 }
 void del_regnick(char *name)
 {
-	NS_User *ns = findregnick(name);
+	NS_User *ns;
+	hnode_t *nsn = hash_lookup(nsuserlist, name);
 
 #ifdef DEBUG
 	log("DelRegnick(%s)", name);
 #endif
 
-	if (!ns) {
+	if (!nsn) {
 		log("Delregnick(%s) failed!", name);
 		return;
 	}
-
-	del_regnick_from_hash_table(name, ns);
+	ns = hnode_get(nsn);
+	hnode_destroy(nsn);
+	free(ns);
 }
 
 

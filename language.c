@@ -54,10 +54,10 @@ static void load_lang(int index, const char *filename)
     int num, i;
 
 #ifdef DEBUG
-	log("debug: Loading language %d from file `dl/services/lang/%s'",
+	log("debug: Loading language %d from file `data/%s'",
 		index, filename);
 #endif
-    snprintf(buf, sizeof(buf), "dl/services/lang/%s", filename);
+    snprintf(buf, sizeof(buf), "data/%s", filename);
     if (!(f = fopen(buf, "r"))) {
 	log("Failed to load language %d (%s)", index, filename);
 	return;
@@ -264,7 +264,7 @@ void notice_lang(const char *source, char *dest, int message, ...)
 	s += strcspn(s, "\n");
 	if (*s)
 	    *s++ = 0;
-	sts(":%s %s %s :%s", source, "NOTICE", nick, *t ? t : " ");
+	privmsg(nick, source, *t ? t : " ");
     }
 }
 
@@ -315,6 +315,6 @@ void notice_help(const char *source, char *dest, int message, ...)
 	    *s++ = 0;
 	strncpy(outbuf, t, sizeof(outbuf));
 	strnrepl(outbuf, sizeof(outbuf), "\1\1", source);
-	sts(":%s %s %s :%s", source, "NOTICE", nick, *outbuf ? outbuf : " ");
+	privmsg(nick, source,  *outbuf ? outbuf : " ");
     }
 }
