@@ -69,7 +69,7 @@ static void load_lang(int index, const char *filename)
 	log("Warning: Bad number of strings (%d, wanted %d) "
 	    "for language %d (%s)", num, NUM_STRINGS, index, filename);
     }
-    langtexts[index] = smalloc(sizeof(char *) * NUM_STRINGS);
+    langtexts[index] = malloc(sizeof(char *) * NUM_STRINGS);
     if (num > NUM_STRINGS)
 	num = NUM_STRINGS;
     for (i = 0; i < num; i++) {
@@ -109,7 +109,7 @@ static void load_lang(int index, const char *filename)
 	    langtexts[index] = NULL;
 	    return;
 	} else {
-	    langtexts[index][i] = smalloc(len+1);
+	    langtexts[index][i] = malloc(len+1);
 	    fseek(f, pos, SEEK_SET);
 	    if (fread(langtexts[index][i], 1, len, f) != len) {
 		log("Failed to read string %d in language %d (%s)",

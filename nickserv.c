@@ -70,7 +70,7 @@ void lslog(char *, ...);
 int guest_num = 1000;
 
 
-int __Bot_Message(char *origin, char **av, int ac)
+int NS_Bot_Message(char *origin, char **av, int ac)
 {
 	char *buf;
 	User *u;
@@ -82,9 +82,9 @@ int __Bot_Message(char *origin, char **av, int ac)
 	log("%s", av[1]);
 	if (!strcasecmp(av[1], "HELP")) {
 		if (ac > 2) {
-			send_help(u, av[2]);
+			send_nshelp(u, av[2]);
 		} else {
-			send_help(u, NULL);
+			send_nshelp(u, NULL);
 		}
 		return 1;
 	} else if (!strcasecmp(av[1], "REGISTER")) {
@@ -379,8 +379,8 @@ static void ns_forbid(User *u, char *line) {
 			privmsg(u->nick, s_NickServ, "Syntax Error: \002/%s help forbid del\002 for help", s_NickServ);
 			return;
 		}			
-		newlist = smalloc(1024);
-		tmp2 = smalloc(1024);
+		newlist = malloc(1024);
+		tmp2 = malloc(1024);
 		strcpy(tmp2, ns_forbid_list);
 		tmp = strtok(tmp2, " ");
 		while (tmp) {
@@ -538,8 +538,8 @@ static void ns_accesslist(User *u, char *line) {
 			privmsg(u->nick, s_NickServ, "Syntax Error: \002/%s help access del\002 for help", s_NickServ);
 			return;
 		}			
-		newacl = smalloc(1024);
-		tmp = smalloc(1024);
+		newacl = malloc(1024);
+		tmp = malloc(1024);
 		strcpy(tmp, ns->acl);
 		target = strtok(tmp, " ");
 		while (target) {
@@ -884,7 +884,7 @@ int ns_bye_user(User *u) {
 		/* recbuf from the core contains the line that trigged this, in this 
 		** case, we need to copy it and extract the quit message
 		*/
-		buffer = smalloc(255);
+		buffer = malloc(255);
 		strcpy(buffer, recbuf);
 		quitmsg = strtok(buffer, ":");
 		quitmsg = strtok(NULL, "");
@@ -900,19 +900,44 @@ int ns_bye_user(User *u) {
 
 int ns_nickchange_user(char *line) {
 	char *orignick, *targetnick;
-	
+	NS_User *tmp_user;
+	char *tmpnick;
+	Svs_Timers *svc_timers;
+	hscan_t hs;
+	hnode_t *rn;
+
+
 	orignick = strtok(line, " ");
 	targetnick = strtok(NULL, " ");
-
-	if (findregnick(orignick)) {
-		sync_nick_to_db(findregnick(orignick));
-		del_regnick(orignick);
+	tmp_user = findregnick(orignick);
+	if (tmp_user) {
+			sync_nick_to_db(tmp_user);
+			if (tmp_user->onlineflags &= NSFL_IDENTTIMEOUT) {
+				/* its a svsnick change */
+				tmp_user->onlineflags = NSFL_ENFORCED;
+#ifdef ULTIMATE3	
+				snewnick_cmd(orignick, "enforcer", me.name, "Services Nickname Enforcer", 0);
+#else 
+				snewnick_cmd(orignick, "enforcer", me.name, "Services Nickname Enforcer");
+#endif
+// TODO: DON'T HARDCODE THIS (size)
+				tmpnick = malloc(37);
+				snprintf(tmpnick, 36, "QuitEnforcer-%s", orignick);
+				svc_timers = new_svs_timers(tmpnick);
+				svc_timers->interval = ENFORCER_HOLD_TIME;
+				svc_timers->lastrun = time(NULL);
+				strcpy(svc_timers->varibles, orignick);
+				svc_timers->function = dlsym((int *)get_dl_handle("Services"), "ns_quit_enforced_nick");
+				if (!svc_timers->function) {
+					log("Error: %s", dlerror());
+				}
+				free(tmpnick);
+			}
 	}
 	
 	/* this function is called after NeoStats has updated the Internal Tables, so finduser will work */
 
 	ns_new_user(finduser(targetnick));
-	ssvsmode_cmd(targetnick, "-r");
 	return 1;
 }
 int ns_new_user( User *u) {
@@ -1006,7 +1031,7 @@ int ns_new_user( User *u) {
 		** and if it is, returns 1, which forces the garbage collection to clean it up
 		*/
 		
-		tmp = smalloc(37);
+		tmp = malloc(37);
 		snprintf(tmp, 36, "IdentTO-%s", u->nick);
 		svc_timers = new_svs_timers(tmp);
 		svc_timers->interval = NICK_IDENT_TIME;
@@ -1025,7 +1050,6 @@ int ns_new_user( User *u) {
 int ns_ident_timeout(char *nick) {
 	User *u;
 	char *tmpnick;
-	Svs_Timers *svc_timers, *svc_timers2;
 	NS_User *tmp_user;
 	
 	u = finduser(nick);
@@ -1038,79 +1062,20 @@ int ns_ident_timeout(char *nick) {
 	if (tmp_user->onlineflags == NSFL_IDENTIFED) return 1;
 	
 	/* create a guest user nick, and make sure its not used */
-	tmpnick = smalloc(32);
+	tmpnick = malloc(32);
 	snprintf(tmpnick, 32, "Guest%i", guest_num++);
 	while (finduser(tmpnick))
 		snprintf(tmpnick, 32, "Guest%i", guest_num++);
 
 	privmsg(u->nick, s_NickServ, "Your Nickname has been changed to \002%s\002 as you did not identify", tmpnick);
 	ssvsnick_cmd(u->nick, tmpnick);
-	free(tmpnick);	
-
-/* now we need to signon a new user to take this nick, so that if the clients script 
-** tries to regain the nick, it wont work.
-** one problem with NeoStats at the moment, is that if someone messages's this 
-** enforced nick, NeoStats is going to Generate a Error message
-** so thats a TODO for NeoStats, find some way to fix that
-** currently Modules can only have 1 Bot... will fix that when I start writting CommServ (as it will be two Bots in the same 
-** Module, and its needed to fix)
-*/
-	
-/* TODO: this is hardcoded stuff, change it when the config interface is available */
-
-	/* add a timer to delete this nick again, hard coded*/
-
-	tmpnick = smalloc(37);
-	snprintf(tmpnick, 36, "QuitEnforcer-%s", u->nick);
-	svc_timers = new_svs_timers(tmpnick);
-	svc_timers->interval = ENFORCER_HOLD_TIME;
-	svc_timers->lastrun = time(NULL);
-	strcpy(svc_timers->varibles, u->nick);
-	svc_timers->function = dlsym((int *)get_dl_handle("Services"), "ns_quit_enforced_nick");
-	if (!svc_timers->function) {
-		log("Error: %s", dlerror());
-	}
 	free(tmpnick);
-	tmpnick = smalloc(254);
-	snprintf(tmpnick, 254, "SignonEnforcer-%s", u->nick);
-	svc_timers2 = new_svs_timers(tmpnick);
+	/* when we get the nickchange event for this nick, we will see their nick is ident timeout so we sign on a new user */
+	tmp_user->onlineflags = NSFL_IDENTTIMEOUT;
 	
-	/* run it straight away */
-	/* Straight away is NOT 0, as this would run it straight after this function, which deletes the purpose of a delay */
-	
-	svc_timers2->interval = 2;
-	svc_timers2->lastrun = time(NULL);
-	snprintf(svc_timers2->varibles, 254, "NICK %s 1 %d enforcer %s %s 0 :Nickname Enforcer", u->nick, (int)time(NULL), me.name, me.name);
-	svc_timers2->function = dlsym((int *)get_dl_handle("Services"), "ns_signon_enforced_nick");
-	if (!svc_timers2->function) {
-		log("Error: %s", dlerror());
-	}
-	free(tmpnick);
 	return 1;	
 }
 
-int ns_signon_enforced_nick(char *vars) {
-	NS_User *temp_user;
-
-	char *nick, *user;
-
-	sts("%s", vars);
-	nick = strtok(vars, " ");
-	nick = strtok(NULL, " ");
-	user = strtok(NULL, " ");
-	user = strtok(NULL, " ");
-	user = strtok(NULL, " ");
-	
-	/* this is bad... NeoStats wont know how to handle this user... See the comments in ns_ident_timeout */
-	
-	AddUser(nick, user, me.name, me.name);
-	
-	/* have to add this user to the regnicks list, so recover can work */
-	
-	temp_user = new_regnick(nick, 1);
-	temp_user->onlineflags = NSFL_ENFORCED;
-	return 1;
-}
 int ns_quit_enforced_nick(char *nick) {
 	NS_User *temp_user;
 	
@@ -1124,7 +1089,7 @@ int ns_quit_enforced_nick(char *nick) {
 
 	/* TODO: its this user is added to any list, then remove it */
 
-	DelUser(nick);
+//	DelUser(nick);
 
 	/* remove it from the Registered Nicks List 
 	** we don't have to check if its in the list, as its a Enforcer Nick
@@ -1190,7 +1155,7 @@ static void ns_recover(User *u, char *nick, char *pass) {
 		return;
 	}
 	
-	tmp = smalloc(10);
+	tmp = malloc(10);
 	snprintf(tmp, 10, "Guest%i", guest_num++);
 	
 	/* make sure that the nickname isn't used, and if it is, keep trying till we find a nick not being used! */
@@ -1234,7 +1199,7 @@ static void ns_ghost(User *u, char *nick, char *pass) {
 	privmsg(u->nick, s_NickServ, "Success. the Nickname %s has been killed", target->nick);
 	ssvskill_cmd(target->nick, ":KILLED: Ghost Command Used by %s(%s@%s)");
 	notice(s_NickServ, "%s(%s@%s) Used Ghost Comand on %s(%s@%s)", u->nick, u->username, u->hostname, target->nick, target->username, target->hostname); 
-	tmp = smalloc(255);
+	tmp = malloc(255);
 	snprintf(tmp, 255, "%s", target->nick);
 	free(tmp);
 	free(temp_user);

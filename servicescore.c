@@ -40,6 +40,19 @@ Functions my_fn_list[] = {
 };
 
 
+int __Bot_Message(char *origin, char **av, int ac)
+{
+
+	if (!strcasecmp(av[0], s_NickServ)) {
+		NS_Bot_Message(origin, av, ac);
+	}
+	if (!strcasecmp(av[0], s_MemoServ)) {
+		MS_Bot_Message(origin, av, ac);
+	}
+}
+
+
+
 int Online(Server *data) {
 
 	if (init_bot(s_NickServ,"nick",me.name,"Network Nick Service", "+xd", my_info[0].module_name) == -1 ) {
@@ -47,6 +60,12 @@ int Online(Server *data) {
 		s_NickServ = strcat(s_NickServ, "_");
 		init_bot(s_NickServ,"nick",me.name,"Network Nick Service", "+xd", my_info[0].module_name);
 	}
+	if (init_bot(s_MemoServ, "memo", me.name, "Network Memo Service", "+xd", my_info[0].module_name) == -1) {
+		/* Nick was in use!!!! */
+		s_MemoServ = strcat(s_MemoServ, "_");
+		init_bot(s_MemoServ,"memo",me.name,"Network Memo Service", "+xd", my_info[0].module_name);
+	}
+
 /* TODO: don't use constants here */
 	add_mod_timer("runsvstimers", "Services", "Services", 1);
 	add_mod_timer("sync_changed_nicks_to_db", "DB_Sync", "Services", DB_SYNC_TIME);
@@ -61,7 +80,6 @@ EventFnList my_event_list[] = {
 	{ "NICK_CHANGE",	(void *)ns_nickchange_user},
 	{ NULL, 		NULL}
 };
-
 
 
 Module_Info *__module_get_info() {
@@ -80,24 +98,40 @@ void _init() {
 	int ret;
 
 	s_NickServ = "NS";
-
+        s_MemoServ = "MS";
 
 	ret = db_create(&dbp, NULL,0);
 	if (ret != 0) {
 		log("nickserv dbcreate error");
 		return;
 	}
-	ret = dbp->open(dbp, NSDBASE, NULL, DB_HASH, 0, 0644);
+	ret = db_create(&mdbp, NULL,0);
+	if (ret != 0) {
+		log("memoserv dbcreate error");
+		return;
+	}
+	ret = dbp->open(dbp, NSDBASE, "NICKSERV", DB_HASH, 0, 0644);
 	if (ret == ENOENT) { 
 		/* db doesn't exist */
 		log("nickserv Database Doesn't Exist, Creating it!");
-		ret = dbp->open(dbp, NSDBASE, NULL, DB_HASH, DB_CREATE, 0644);
+		ret = dbp->open(dbp, NSDBASE, "NICKSERV", DB_HASH, DB_CREATE, 0644);
 	}
 	if (ret != 0) {
 		log("nickserv dbopen error %s", db_strerror(ret));
 		return;
 	}
+	ret = mdbp->open(mdbp, NSDBASE, "MEMOSERV", DB_HASH, 0, 0644);
+	if (ret == ENOENT) { 
+		/* db doesn't exist */
+		log("memoserv Database Doesn't Exist, Creating it!");
+		ret = mdbp->open(mdbp, NSDBASE, "MEMOSERV", DB_HASH, DB_CREATE, 0644);
+	}
+	if (ret != 0) {
+		log("memoserv dbopen error %s", db_strerror(ret));
+		return;
+	}
 	log("NickServ Loaded");
+	log("MemoServ Loaded");
 	init_regnick_hash();
 	/* load the nickserv forbidden list */
 	init_nick_forbid_list();
@@ -111,6 +145,11 @@ void _fini() {
 		if ((ret = dbp->close(dbp, 0) != 0)) {
 			globops("NickServ DB Close Error: %s", db_strerror(ret));
 		};
+	}
+	if (mdbp != NULL) {
+		if ((ret = mdbp->close(mdbp, 0) != 0)) {
+			globops("MemoServ DB Close Error: %s", db_strerror(ret));
+		}
 	}
 	log("NickServ Unloaded");
 };

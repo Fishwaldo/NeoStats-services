@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: services.h,v 1.3 2002/03/31 08:37:14 fishwaldo Exp $
+** $Id: services.h,v 1.4 2002/06/05 15:41:10 fishwaldo Exp $
 */
 
 #ifndef M_SERVICES
@@ -32,9 +32,13 @@
 #include <hash.h>
 #include "options.h"
 
-
+/* nickserv database */
 DB *dbp;
+/* memoserv database */
+DB *mdbp;
+
 char *s_NickServ;
+char *s_MemoServ;
 
 /* used to determine which nicks have changed, and need sync'ing */
 int last_db_sync;
@@ -155,7 +159,7 @@ int get_dl_handle(char *);
 #define NSFL_ACCESSMATCH	0x0004 /* user has been matched against the accesslist */
 #define NSFL_ENFORCED		0x0008 /* this is a Enforcer.. ie, not a real user */
 #define NSFL_SUSPEND		0x0010 /* nickname is suspended */
-
+#define NSFL_IDENTTIMEOUT	0x0020 /* nickname has ident timeout */
 
 
 #define NUM_LANGS		10

@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: options.h,v 1.2 2002/03/28 08:58:16 fishwaldo Exp $
+** $Id: options.h,v 1.3 2002/06/05 15:41:10 fishwaldo Exp $
 */
 
 
@@ -53,7 +53,7 @@
 */
 
 #define NSDBASE 	"data/nsdata.db"
-
+#define MSDBASE		"data/msdata.db"
 
 /* how long do users have to ident to nickserv before their nick is changed.
 ** this is set if kill is active for that nick (kill isn't a good word, read the online help about set kill.

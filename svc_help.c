@@ -56,17 +56,37 @@ const SVC_help_ns svc_ns_help_index[] = {
 	{NULL, 		NULL, 		0}
 };
 
-extern void send_help(User *u, char *line) {
+const SVC_help_ns svc_ms_help_index[] = {
+	/* help, 	help function, 			level */	
+	{"HELP", 	MEMOSERV_HELP,  		0},
+	{NULL, 		NULL, 		0}
+};
+
+extern void send_nshelp(User *u, char *line) {
 	int i;
 	if (!line) {
-		line = smalloc(5);
+		line = malloc(5);
 		strcpy(line, "HELP");
 	}
 	for (i = 0; i < ((sizeof(svc_ns_help_index) / sizeof(svc_ns_help_index[0])) -1); i++) {
-	log("%s - %s %d", svc_ns_help_index[i].name, line, strcasecmp(svc_ns_help_index[i].name, line));
 		if (!strcasecmp(svc_ns_help_index[i].name, line)) {
 			if (UserLevel(u) >= svc_ns_help_index[i].level) {
 				notice_help(s_NickServ, u->nick, svc_ns_help_index[i].function);
+			}
+		}
+	}
+}
+
+extern void send_mshelp(User *u, char *line) {
+	int i;
+	if (!line) {
+		line = malloc(5);
+		strcpy(line, "HELP");
+	}
+	for (i = 0; i < ((sizeof(svc_ms_help_index) / sizeof(svc_ms_help_index[0])) -1); i++) {
+		if (!strcasecmp(svc_ms_help_index[i].name, line)) {
+			if (UserLevel(u) >= svc_ms_help_index[i].level) {
+				notice_help(s_MemoServ, u->nick, svc_ms_help_index[i].function);
 			}
 		}
 	}

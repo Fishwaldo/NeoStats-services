@@ -5,7 +5,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: hash.c,v 1.3 2002/03/31 08:37:14 fishwaldo Exp $
+** $Id: hash.c,v 1.4 2002/06/05 15:41:10 fishwaldo Exp $
 */
 
 
@@ -157,8 +157,8 @@ NS_User *lookup_regnick(char *name)
 	NS_User *ns2;
 	DBT key, data;
 	int i;
-
-	ns2 = smalloc(sizeof(NS_User));
+	
+	ns2 = malloc(sizeof(NS_User));
 	bzero(ns2, sizeof(NS_User));
         memset(&key, 0, sizeof(key));
         memset(&data, 0, sizeof(data));
@@ -189,8 +189,8 @@ NS_User *new_regnick(char *name, int create)
 	DBT key, data;
 	int i;
 
-	ns = smalloc(sizeof(NS_User));
-	ns2 = smalloc(sizeof(NS_User));
+	ns = malloc(sizeof(NS_User));
+	ns2 = malloc(sizeof(NS_User));
 	bzero(ns, sizeof(NS_User));
 	bzero(ns2, sizeof(NS_User));
         memset(&key, 0, sizeof(key));
@@ -231,10 +231,10 @@ NS_User *new_regnick(char *name, int create)
 /*		free(ns2); */
 	}	
 
-	memcpy(ns->nick, name, strlen(name)+1);
+	strncpy(ns->nick, name, strlen(name));
 	nsn = hnode_create(ns);
 	if (!hash_isfull(nsuserlist)) {
-		hash_insert(nsuserlist, nsn, name);
+		hash_insert(nsuserlist, nsn, ns->nick);
 	} else {
 		log("eeek, NickServ User list hash is full");
 	}
@@ -270,6 +270,7 @@ void del_regnick(char *name)
 		return;
 	}
 	ns = hnode_get(nsn);
+	hash_delete(nsuserlist, nsn);
 	hnode_destroy(nsn);
 	free(ns);
 }

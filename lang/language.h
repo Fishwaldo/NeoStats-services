@@ -43,5 +43,6 @@
 #define NICKSERV_HELP_SETPASS            42
 #define NICKSERV_HELP_VHOST              43
 #define NICKSERV_HELP_ACCESS             44
+#define MEMOSERV_HELP                    45
 
-#define NUM_STRINGS 45
+#define NUM_STRINGS 46

@@ -411,3 +411,8 @@ NICKSERV_HELP_ACCESS
 	/msg %S access del <num>
 	will delete the corrosponding entry out of your access list. You can
 	figure out what num is via /msg %S access list
+
+
+MEMOSERV_HELP
+	%S allows a registered IRC user to send Memos to other
+	registered IRC users

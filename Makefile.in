@@ -8,8 +8,8 @@ INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY=@DIRINST@/dl/
 INCLUDES=-I@DIRINST@/include/ -I.
 
-SOURCES= match.c hash.c servicescore.c nickserv.c language.c svc_help.c                                                                      
-OBJECTS= match.o hash.o servicescore.o nickserv.o language.o svc_help.o                                                                      
+SOURCES= match.c hash.c servicescore.c nickserv.c language.c svc_help.c memoserv.c
+OBJECTS= match.o hash.o servicescore.o nickserv.o language.o svc_help.o memoserv.o
 TARGET= services.so                 
 DOCS=README.services
 DATA= lang/en_us
@@ -45,3 +45,4 @@ hash.o:		hash.c		services.h
 servicescore.o: hash.c match.c language.c nickserv.c	services.h
 nickserv.o:	match.c hash.c servicescore.c	services.h
 langauges.o:	servicescore.c nickserv.c	services.h
+memoserv.o:	hash.c servicescore.c services.h
